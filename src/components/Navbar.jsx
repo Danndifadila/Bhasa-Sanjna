@@ -26,7 +26,7 @@ const Navbar = () => {
           to="/dictionary" 
           className={`px-4 py-2 rounded-md ${isActive('/dictionary')}`}
         >
-          Sign Language Dictionary
+          Dictionary
         </Link>
         <Link 
           to="/history" 

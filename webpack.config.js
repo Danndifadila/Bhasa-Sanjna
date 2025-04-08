@@ -24,21 +24,20 @@ module.exports = {
       {
         test: /\.css$/,
         use: [
-          'style-loader', 
-          'css-loader', 
+          "style-loader",
+          "css-loader",
           {
-            loader: 'postcss-loader',
+            loader: "postcss-loader",
             options: {
               postcssOptions: {
                 plugins: [
-                  require('@tailwindcss/postcss'),
-                  require('autoprefixer'),
+                  require("@tailwindcss/postcss"),
+                  require("autoprefixer"),
                 ],
               },
             },
-          }
+          },
         ],
-
       },
     ],
   },
