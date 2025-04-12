@@ -17,7 +17,7 @@ export const getAllTranslationsDictionaryHandler = async (request, h) => {
     return h.response({
       status: 'success',
       data: {
-        translations: rows
+        translations: rows,
       },
     }).code(200);
   } catch (error) {
@@ -26,46 +26,47 @@ export const getAllTranslationsDictionaryHandler = async (request, h) => {
   }
 };
 
-export const addTranslationHandler = (request, h) => {
-  const { image, text } = request.payload;
+export const addTranslationHandler = async (request, h) => {
+  const { video, text } = request.payload;
 
-  if (!image || !text) {
+  if (!video || !text) {
     return h.response({
       status: 'fail',
-      message: 'Gagal menambahkan terjemahan. Mohon isi gambar dan teks hasil terjemahan',
+      message: 'Gagal menambahkan terjemahan. Mohon isi video dan teks hasil terjemahan',
     }).code(400);
   }
 
-  const id = nanoid(16);
-  const addedAt = new Date().toISOString();
+  const id = nanoid(16);  
+  const addedAt = new Date().toISOString();  
 
-  const newTranslation = {
-    id,
-    image,
-    text,
-    addedAt
-  };
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO translations (id, video, text, addedAt) VALUES (?, ?, ?, ?)',
+      [id, video, text, addedAt ]
+    );
 
-  translations.push(newTranslation);
-
-  return h.response({
-    status: 'success',
-    message: 'Terjemahan berhasil ditambahkan',
-    data: {
-      translationId: id,
-      translation: newTranslation,
-    },
-  }).code(201);
+    return h.response({
+      status: 'success',
+      message: 'Terjemahan berhasil ditambahkan',
+      data: {
+        translationId: result.insertId,  
+        video,
+        text,
+      },
+    }).code(201);
+  } catch (error) {
+    console.error(error);
+    return h.response({ status: 'error', message: 'Gagal menambahkan data ke database' }).code(500);
+  }
 };
 
 export const addTranslationsDictionaryHandler = async (request, h) => {
   const { image, text } = request.payload;
 
-  
   if (!image || !text) {
     return h.response({
       status: 'fail',
-      message: 'Gagal menambahkan terjemahan. Mohon isi gambar dan teks hasil terjemahan',
+      message: 'Gagal menambahkan terjemahan. Mohon isi image dan teks hasil terjemahan',
     }).code(400);
   }
 
@@ -79,9 +80,9 @@ export const addTranslationsDictionaryHandler = async (request, h) => {
       status: 'success',
       message: 'Terjemahan berhasil ditambahkan',
       data: {
-        translationId: result.insertId, 
+        translationId: result.insertId,
         image,
-        text
+        text,
       },
     }).code(201);
   } catch (error) {

@@ -1,4 +1,5 @@
 import { getAllTranslationsHandler, addTranslationHandler, getAllTranslationsDictionaryHandler, addTranslationsDictionaryHandler } from './handlers.js';
+import { loginHandler, registerHandler } from './authHandlers.js';
 
 const routes = [
   {
@@ -20,6 +21,16 @@ const routes = [
     method: 'POST',
     path: '/translations/dictionary',
     handler: addTranslationsDictionaryHandler,
+  },
+  {
+    method: 'POST',
+    path: '/register',
+    handler: registerHandler
+  },
+  {
+    method: 'POST',
+    path: '/login',
+    handler: loginHandler
   }
 ];
 
