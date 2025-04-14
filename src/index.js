@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import api from './api';
 
+// Initialize the root element for React rendering
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
@@ -11,23 +12,31 @@ root.render(
   </React.StrictMode>
 );
 
-
-
+// Function to fetch and render translations
 async function renderTranslations() {
-
   try {
-    const data = await api.getAllTranslations(); 
+    // Fetch all translations from the API
+    const { translations } = await api.getAllTranslations();
 
-    data.translations.forEach((item) => {
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <h3>${item.video}</h3>
-        <p>${item.text}</p>\
+    // Create a container to hold the translations
+    const container = document.createElement('div');
+    container.id = 'translations-container';
+    document.body.appendChild(container);
+
+    // Dynamically generate and append translation elements
+    translations.forEach(({ video, text }) => {
+      const translationDiv = document.createElement('div');
+      translationDiv.innerHTML = `
+        <h3>${video}</h3>
+        <p>${text}</p>
       `;
+      container.appendChild(translationDiv);
     });
   } catch (error) {
-    console.error("Gagal menampilkan data:", error);
+    // Log an error message if the API call fails
+    console.error('Failed to fetch and display translations:', error);
   }
 }
 
+// Call the function to render translations
 renderTranslations();
