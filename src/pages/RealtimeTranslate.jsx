@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import TranslationBox from '../components/TranslationBox';
 import { ArrowLeft } from 'lucide-react';
-import api from '../api';
 
-// Komponen listener navigasi
+// Navigation listener component to handle route changes
 const NavigationListener = () => {
   useEffect(() => {
+    // Dispatch event to stop the camera when navigating away
     const handleRouteChange = () => {
-      // Kirim event khusus untuk mematikan kamera
       window.dispatchEvent(new Event('stop-camera'));
     };
 
@@ -23,145 +22,79 @@ const NavigationListener = () => {
 
 const RealtimeTranslate = () => {
   const navigate = useNavigate();
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const [translatedText, setTranslatedText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const videoRef = useRef(null); // Reference to the video element
+  const streamRef = useRef(null); // Reference to the camera stream
+  const [translatedText, setTranslatedText] = useState(''); // State for translated text
+  const [isLoading, setIsLoading] = useState(false); // State for loading status
   const [cameraStatus, setCameraStatus] = useState({
     active: false,
     error: null,
-    tracks: 0
-  });
+    tracks: 0,
+  }); // State for camera status
 
-  // Fungsi untuk menghentikan stream kamera secara total
+  // Function to stop the camera stream
   const stopCamera = () => {
-    console.log('Stopping camera...');
-    
     if (streamRef.current) {
       const tracks = streamRef.current.getTracks();
-      
-      console.log(`Number of tracks: ${tracks.length}`);
-      
-      tracks.forEach(track => {
-        console.log(`Stopping track: ${track.kind}`);
-        track.stop();
-      });
-      
-      // Hapus source object dari video
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-
+      tracks.forEach((track) => track.stop()); // Stop all tracks
+      if (videoRef.current) videoRef.current.srcObject = null; // Clear video source
       streamRef.current = null;
-      setCameraStatus({ 
-        active: false, 
-        error: null,
-        tracks: 0
-      });
-
-      console.log('Camera stopped successfully');
-    } else {
-      console.log('No active camera stream to stop');
+      setCameraStatus({ active: false, error: null, tracks: 0 });
     }
   };
 
-  // Memulai kamera
+  // Function to start the camera
   const startCamera = async () => {
     try {
-      // Pastikan stream sebelumnya dihentikan
-      stopCamera();
-
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        } 
+      stopCamera(); // Ensure previous stream is stopped
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 } },
       });
-
-      console.log('Camera stream obtained');
-      console.log('Stream active:', stream.active);
-      
-      // Simpan stream
-      streamRef.current = stream;
-
-      // Set video source
+      streamRef.current = stream; // Save the stream reference
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        
-        // Tambahkan event listener untuk memastikan video berjalan
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play()
-            .then(() => console.log('Video playing'))
-            .catch(err => console.error('Error playing video:', err));
+          videoRef.current.play().catch((err) => console.error('Error playing video:', err));
         };
       }
-
-      // Update status kamera
-      setCameraStatus({ 
-        active: true, 
-        error: null,
-        tracks: stream.getTracks().length
-      });
-
+      setCameraStatus({ active: true, error: null, tracks: stream.getTracks().length });
     } catch (err) {
-      console.error("Error accessing camera:", err);
-      setCameraStatus({ 
-        active: false, 
-        error: err.message || "Gagal mengakses kamera",
-        tracks: 0
-      });
+      console.error('Error accessing camera:', err);
+      setCameraStatus({ active: false, error: err.message || 'Failed to access camera', tracks: 0 });
     }
   };
 
-  // Efek untuk memulai kamera saat komponen dimuat
+  // Start the camera when the component mounts
   useEffect(() => {
     startCamera();
-
-    // Cleanup saat komponen unmount
-    return () => {
-      stopCamera();
-    };
+    return () => stopCamera(); // Cleanup on unmount
   }, []);
 
-  // Listener untuk menghentikan kamera saat halaman tidak terlihat
+  // Stop the camera when the page is not visible
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        stopCamera();
-      }
+      if (document.hidden) stopCamera();
     };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  // Listener khusus untuk event stop-camera
+  // Listen for custom 'stop-camera' events
   useEffect(() => {
-    const stopCameraHandler = () => {
-      stopCamera();
-    };
-
+    const stopCameraHandler = () => stopCamera();
     window.addEventListener('stop-camera', stopCameraHandler);
-
-    return () => {
-      window.removeEventListener('stop-camera', stopCameraHandler);
-      stopCamera();
-    };
+    return () => window.removeEventListener('stop-camera', stopCameraHandler);
   }, []);
 
-  // Mock translation effect
+  // Mock translation effect to simulate real-time translation
   useEffect(() => {
     const phrases = [
-      "Hello, how are you?",
-      "I am fine, thank you",
-      "Nice to meet you",
-      "What is your name?",
-      "My name is..."
+      'Hello, how are you?',
+      'I am fine, thank you',
+      'Nice to meet you',
+      'What is your name?',
+      'My name is...',
     ];
-    
     const intervalId = setInterval(() => {
       setIsLoading(true);
       setTimeout(() => {
@@ -170,11 +103,10 @@ const RealtimeTranslate = () => {
         setIsLoading(false);
       }, 1500);
     }, 5000);
-
-    return () => clearInterval(intervalId);
+    return () => clearInterval(intervalId); // Cleanup interval on unmount
   }, []);
 
-  // Handler untuk kembali
+  // Handle back button click
   const handleGoBack = () => {
     stopCamera();
     navigate('/');
@@ -186,42 +118,43 @@ const RealtimeTranslate = () => {
       <div className="min-h-screen bg-gray-100">
         <div className="container mx-auto px-4">
           <Navbar />
-          
           <main className="py-4">
-            <button 
+            {/* Back button */}
+            <button
               onClick={handleGoBack}
               className="mb-4 flex items-center text-gray-600 hover:text-gray-800"
             >
               <ArrowLeft className="h-5 w-5 mr-1" />
               <span>Kembali</span>
             </button>
-            
+
+            {/* Page title and instructions */}
             <h1 className="text-3xl font-bold text-center mb-4">Menerjemahkan Gerakan Anda</h1>
-            <p className="text-center text-gray-600 mb-6">Pastikan kamera Anda aktif dan tidak terhalang</p>
-            
+            <p className="text-center text-gray-600 mb-6">
+              Pastikan kamera Anda aktif dan tidak terhalang
+            </p>
+
+            {/* Camera and translation box */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-200 rounded-lg overflow-hidden">
                 {cameraStatus.active ? (
-                  <video 
+                  <video
                     ref={videoRef}
-                    autoPlay 
-                    playsInline 
+                    autoPlay
+                    playsInline
                     muted
                     className="w-full h-64 object-cover"
                   ></video>
                 ) : (
                   <div className="w-full h-64 flex items-center justify-center text-gray-500">
-                    {cameraStatus.error ? 
-                      `Error: ${cameraStatus.error}` : 
-                      'Kamera tidak aktif'
-                    }
+                    {cameraStatus.error ? `Error: ${cameraStatus.error}` : 'Kamera tidak aktif'}
                   </div>
                 )}
               </div>
               <TranslationBox text={translatedText} isLoading={isLoading} />
             </div>
 
-            {/* Debug Info */}
+            {/* Debug information */}
             <div className="mt-4 text-center text-sm text-gray-600">
               Camera Status: {cameraStatus.active ? 'Active' : 'Inactive'}
               <br />
@@ -234,10 +167,10 @@ const RealtimeTranslate = () => {
               )}
             </div>
 
-            {/* Tombol untuk memulai ulang kamera jika gagal */}
+            {/* Retry button for camera */}
             {!cameraStatus.active && (
               <div className="text-center mt-4">
-                <button 
+                <button
                   onClick={startCamera}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
