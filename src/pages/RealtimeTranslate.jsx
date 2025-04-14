@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import TranslationBox from '../components/TranslationBox';
 import { ArrowLeft } from 'lucide-react';
+import api from '../api';
 
 // Komponen listener navigasi
 const NavigationListener = () => {
