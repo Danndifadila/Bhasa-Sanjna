@@ -1,10 +1,5 @@
 # Bhasa-Sanjna
 
-Berikut contoh README.md sederhana untuk proyek *Bhasa Sanjna*:
-
-markdown
-# Bhasa Sanjna
-
 **Bhasa Sanjna** adalah sebuah aplikasi berbasis web yang bertujuan untuk menjembatani komunikasi antara masyarakat umum dengan penyandang Tuli atau pengguna bahasa isyarat. Aplikasi ini memungkinkan pengguna untuk menerjemahkan teks menjadi bahasa isyarat dan sebaliknya, serta menyimpan riwayat interaksi.
 
 ## Fitur Utama
