@@ -4,8 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/server.js",
-    "start-dev": "webpack serve --mode development --open",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon server.js",
+    "client": "webpack serve --mode development --open",
+    "build:client": "webpack --mode production",
+    "build:server": "webpack --mode production",
+    "build:all": "npm run build:client && npm run build:server",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev:client": "webpack serve --mode development --open",
+    "dev:server": "nodemon server.js",
     "build": "webpack --mode production",
     "lint": "eslint ./",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -32,6 +39,7 @@
     "nanoid": "^5.1.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^7.4.0"
   },
   "devDependencies": {
@@ -41,6 +49,7 @@
     "@tailwindcss/postcss": "^4.0.15",
     "autoprefixer": "^10.4.21",
     "babel-loader": "^10.0.0",
+    "concurrently": "^9.1.2",
     "css-loader": "^7.1.2",
     "globals": "^16.0.0",
     "postcss": "^8.5.3",
