@@ -1,36 +1,49 @@
-import { getAllTranslationsHandler, addTranslationHandler, getAllTranslationsDictionaryHandler, addTranslationsDictionaryHandler } from './handlers.js';
-import { loginHandler, registerHandler } from './authHandlers.js';
+import { handler } from '@hapi/hapi/lib/cors.js';
+import { getAllTranslationsHandler, getTranslationByIdHandler, addTranslationHandler, getAllTranslationsHistory } from './handlers.js';
+import path from 'path';
+import fs from 'fs';
+import pool from '../database.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const videoUploadPath = path.resolve(__dirname, 'videos');
+
+if (!fs.existsSync(videoUploadPath)) {
+  fs.mkdirSync(videoUploadPath);
+}
 
 const routes = [
+  {
+    method: 'POST',
+    path: '/translations',
+    handler: addTranslationHandler,
+    options: {
+      payload: {
+        output: 'stream',
+        parse: true,
+        allow: 'multipart/form-data',
+        multipart: true,
+        maxBytes: 10485760,
+      },
+  },
+},
   {
     method: 'GET',
     path: '/translations',
     handler: getAllTranslationsHandler,
   },
   {
-    method: 'POST',
-    path: '/translations',
-    handler: addTranslationHandler,
+    method:'GET',
+    path: '/translations/{id}',
+    handler: getTranslationByIdHandler,
   },
   {
     method: 'GET',
-    path: '/translations/dictionary',
-    handler: getAllTranslationsDictionaryHandler,
-  },
-  {
-    method: 'POST',
-    path: '/translations/dictionary',
-    handler: addTranslationsDictionaryHandler,
-  },
-  {
-    method: 'POST',
-    path: '/register',
-    handler: registerHandler
-  },
-  {
-    method: 'POST',
-    path: '/login',
-    handler: loginHandler
+    path: '/translations/history',
+    handler: getAllTranslationsHistory,
   }
 ];
 

@@ -33,95 +33,8 @@ const RealtimeTranslate = () => {
     tracks: 0
   });
 
-  // Fungsi untuk menghentikan stream kamera secara total
-  const stopCamera = () => {
-    console.log('Stopping camera...');
-    
-    if (streamRef.current) {
-      const tracks = streamRef.current.getTracks();
-      
-      console.log(`Number of tracks: ${tracks.length}`);
-      
-      tracks.forEach(track => {
-        console.log(`Stopping track: ${track.kind}`);
-        track.stop();
-      });
-      
-      // Hapus source object dari video
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
 
-      streamRef.current = null;
-      setCameraStatus({ 
-        active: false, 
-        error: null,
-        tracks: 0
-      });
-
-      console.log('Camera stopped successfully');
-    } else {
-      console.log('No active camera stream to stop');
-    }
-  };
-
-  // Memulai kamera
-  const startCamera = async () => {
-    try {
-      // Pastikan stream sebelumnya dihentikan
-      stopCamera();
-
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        } 
-      });
-
-      console.log('Camera stream obtained');
-      console.log('Stream active:', stream.active);
-      
-      // Simpan stream
-      streamRef.current = stream;
-
-      // Set video source
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Tambahkan event listener untuk memastikan video berjalan
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play()
-            .then(() => console.log('Video playing'))
-            .catch(err => console.error('Error playing video:', err));
-        };
-      }
-
-      // Update status kamera
-      setCameraStatus({ 
-        active: true, 
-        error: null,
-        tracks: stream.getTracks().length
-      });
-
-    } catch (err) {
-      console.error("Error accessing camera:", err);
-      setCameraStatus({ 
-        active: false, 
-        error: err.message || "Gagal mengakses kamera",
-        tracks: 0
-      });
-    }
-  };
-
-  // Efek untuk memulai kamera saat komponen dimuat
-  useEffect(() => {
-    startCamera();
-
-    // Cleanup saat komponen unmount
-    return () => {
-      stopCamera();
-    };
-  }, []);
+  
 
   // Listener untuk menghentikan kamera saat halaman tidak terlihat
   useEffect(() => {
@@ -174,11 +87,110 @@ const RealtimeTranslate = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  const [recordedChunks, setRecordedChunks] = useState([]);
+  const mediaRecorderRef = useRef(null);
+  
+  const startCamera = async () => {
+    try {
+      stopCamera();
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      streamRef.current = stream;
+  
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play();
+        };
+      }
+  
+      setCameraStatus({ active: true, error: null, tracks: stream.getTracks().length });
+  
+      // Mulai merekam
+      const options = { mimeType: 'video/webm' };
+      const mediaRecorder = new MediaRecorder(stream, options);
+      const chunks = [];
+  
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+  
+      mediaRecorder.onstop = () => {
+        setRecordedChunks(chunks);
+      };
+  
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+  
+      console.log('MediaRecorder started');
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      setCameraStatus({ active: false, error: err.message, tracks: 0 });
+    }
+  };
+  
+  
+  const stopCamera = () => {
+    console.log('Stopping camera...');
+    
+    // Stop recording
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      console.log('Recording stopped');
+    }
+  
+    // Stop camera stream
+    if (streamRef.current) {
+      const tracks = streamRef.current.getTracks();
+      tracks.forEach(track => track.stop());
+  
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+  
+      streamRef.current = null;
+      setCameraStatus({ active: false, error: null, tracks: 0 });
+      console.log('Camera stopped successfully');
+    }
+  };
+  
+  // Efek untuk memulai kamera saat komponen dimuat
+  useEffect(() => {
+    startCamera();
+
+    // Cleanup saat komponen unmount
+    return () => {
+      stopCamera();
+    };
+  }, []);
   // Handler untuk kembali
-  const handleGoBack = () => {
+  const handleGoBack = async () => {
+    try {
+      // Stop recorder dulu kalau masih jalan
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+  
+      // Tunggu sebentar supaya onstop selesai dan state updated
+      await new Promise(resolve => setTimeout(resolve, 500));
+  
+      let recordedBlob = null;
+      if (recordedChunks.length > 0) {
+        recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+      }
+  
+      await api.addTranslations(recordedBlob, translatedText);
+      console.log('Translations and video added successfully');
+    } catch (error) {
+      console.error('Error adding data:', error);
+    }
+  
     stopCamera();
     navigate('/');
   };
+  
+  
 
   return (
     <>
@@ -234,7 +246,6 @@ const RealtimeTranslate = () => {
               )}
             </div>
 
-            {/* Tombol untuk memulai ulang kamera jika gagal */}
             {!cameraStatus.active && (
               <div className="text-center mt-4">
                 <button 

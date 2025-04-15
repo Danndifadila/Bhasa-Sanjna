@@ -8,11 +8,11 @@ import Navbar from '../components/Navbar';
 const SignDictionary = () => {
   // Dummy data for dictionary entries
   const dictionaryEntries = [
-    { id: 1, gesture: "https://example.com/gesture1.mp4", translation: "Hello" },
-    { id: 2, gesture: "https://example.com/gesture2.mp4", translation: "Thank you" },
-    { id: 3, gesture: "https://example.com/gesture3.mp4", translation: "Yes" },
-    { id: 4, gesture: "https://example.com/gesture4.mp4", translation: "No" },
-    { id: 5, gesture: "https://example.com/gesture5.mp4", translation: "Help" },
+    { id: 1, gesture: "/picture/L.jpg", translation: "L" },
+    { id: 2, gesture: "/picture/Terimakasih.png", translation: "Terima Kasih" },
+    { id: 3, gesture: "/picture/D.jpg", translation: "D" },
+    { id: 4, gesture: "/picture/M.jpg", translation: "M" },
+    { id: 5, gesture: "/picture/J.jpg", translation: "J" },
   ];
 
   return (
@@ -35,9 +35,8 @@ const SignDictionary = () => {
                 {dictionaryEntries.map((entry) => (
                   <tr key={entry.id}>
                     <td className="py-4 px-6">
-                      <div className="bg-gray-200 w-32 h-24 rounded flex items-center justify-center">
-                        {/* In a real app, this would be a video player */}
-                        <span className="text-gray-500">Video</span>
+                      <div className="bg-gray-200 w-32 h-24 rounded flex items-center justify-center overflow-hidden">
+                        <img src={entry.gesture} alt={entry.translation} className="w-full h-full object-contain" />
                       </div>
                     </td>
                     <td className="py-4 px-6">{entry.translation}</td>

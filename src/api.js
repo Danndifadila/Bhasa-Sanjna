@@ -2,10 +2,10 @@ const API_URL = 'http://localhost:5000';
 
 const api = {
   // GET - Ambil semua data translation dari memori (translations.js)
-  getAllTranslations: async () => {
+ getAllTranslations : async () => {
     try {
       const response = await fetch(`${API_URL}/translations`);
-      if (!response.ok) throw new Error('Gagal mengambil data dari memori');
+      if (!response.ok) throw new Error('Gagal mengambil data');
       const data = await response.json();
       return data.data.translations;
     } catch (error) {
@@ -13,40 +13,54 @@ const api = {
       throw error;
     }
   },
+  
 
-  // GET - Ambil semua data dari database (translations_dictionary)
-  getAllTranslationsDictionary: async () => {
+  //GET - mengambil data terjemahan berdasarkan id
+  getTranslationById: async (id) => {
     try {
-      const response = await fetch(`${API_URL}/translations/dictionary`);
-      if (!response.ok) throw new Error('Gagal mengambil data dari database');
+      const response = await fetch(`${API_URL}/translations/${id}`);
+      if (!response.ok) throw new Error('Gagal mengambil data berdasarkan ID');
       const data = await response.json();
-      return data.data.translations;
+      return data.data.translation;
     } catch (error) {
-      console.error('Error ambil translations dictionary:', error);
+      console.error('Error ambil translation berdasarkan ID:', error);
       throw error;
     }
   },
 
-  // POST - Tambah hasil translation ke database dan juga ke localStorage
-  addTranslations: async (video, text) => {
+  getAllTranslationsHistory : async () => {
     try {
+      const response = await fetch(`${API_URL}/translations/history`);
+      const data = await response.json(); 
+      return data; 
+    } catch (error) {
+      console.error('Terjadi kesalahan saat mengambil riwayat terjemahan:', error);
+      throw error;
+    }
+  },
+  
+
+  // POST - Tambah hasil translation ke database dan juga ke localStorage
+  addTranslations: async (videoBlob, text) => {
+    try {
+      const formData = new FormData();
+      formData.append('video', videoBlob, 'recorded_video.webm');
+      formData.append('text', text);
+  
       const response = await fetch(`${API_URL}/translations`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ video, text }),
+        body: formData, 
       });
   
       if (!response.ok) throw new Error('Terjadi kesalahan saat menambahkan');
   
       const data = await response.json();
   
-    
       const history = JSON.parse(localStorage.getItem('translations')) || [];
       history.push({
-        id: data.data.translationId,  
+        id: data.data.id,
         video: data.data.video,
         text: data.data.text,
-        addedAt: new Date().toISOString(),
       });
       localStorage.setItem('translations', JSON.stringify(history));
   
@@ -56,61 +70,10 @@ const api = {
       throw error;
     }
   },
+  
+ 
 
-  // POST - Tambah translation ke database dictionary
-  addTranslationsDictionary: async (image, text) => {
-    try {
-      const response = await fetch(`${API_URL}/translations/dictionary`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image, text }),
-      });
-
-      if (!response.ok) throw new Error('Gagal menambahkan ke database');
-      return await response.json();
-    } catch (error) {
-      console.error('Error saat menambahkan ke dictionary:', error);
-      throw error;
-    }
-  },
-
-  registerUser : async (username, password) => {
-    try {
-      const response = await fetch(`${API_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-  
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Gagal registrasi');
-      return data;
-    } catch (error) {
-      console.error('Error saat registrasi:', error);
-      throw error;
-    }
-  },
-  
-  loginUser : async (username, password) => {
-    try {
-      const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-  
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Gagal login');
-  
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('username', username);
-  
-      return data;
-    } catch (error) {
-      console.error('Error saat login:', error);
-      throw error;
-    }
-  },
+ 
 };
 
 export default api;

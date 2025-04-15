@@ -1,22 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { ArrowLeft } from 'lucide-react';
+import api from '../api';
 
 /**
  * History Detail page component
- * Shows detailed view of a past translation activity
+ * Fetches and shows detailed view of a past translation activity
  */
 const HistoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  // Dummy data - in a real app, you would fetch this based on the ID
-  const historyData = {
-    id: id,
-    timestamp: "March 21, 2025 - 2:30 PM",
-    fullText: "Hello, how are you? I am learning sign language. This is a practice session to improve my skills. I want to be able to communicate effectively with the deaf community. Sign language is a beautiful and expressive form of communication."
-  };
+
+  const [historyData, setHistoryData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTranslation = async () => {
+      try {
+        const response = await api.getTranslationById(id); 
+        setHistoryData(response); 
+      } catch (err) {
+        setError('Gagal mengambil data terjemahan.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTranslation();
+  }, [id]);
+
+  if (loading) return <p className="p-4">Loading...</p>;
+  if (error) return <p className="p-4 text-red-500">{error}</p>;
+  if (!historyData) return <p className="p-4">Data tidak ditemukan.</p>;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -33,10 +51,10 @@ const HistoryDetail = () => {
           </button>
           
           <h1 className="text-3xl font-bold mb-2">Translation History</h1>
-          <p className="text-gray-600 mb-6">{historyData.timestamp}</p>
+          <p className="text-gray-600 mb-6">{new Date(historyData.added_at).toLocaleString()}</p>
           
           <div className="bg-white p-6 rounded-lg shadow">
-            <p className="whitespace-pre-line">{historyData.fullText}</p>
+            <p className="whitespace-pre-line">{historyData.text}</p>
           </div>
         </main>
       </div>
