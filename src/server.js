@@ -1,7 +1,7 @@
 // Import Hapi framework
 import Hapi from '@hapi/hapi';
 // Import routes configuration
-import routes from './routes.js';
+import routes from './routes-backend.js';
 
 // Initialize the server
 const init = async () => {
