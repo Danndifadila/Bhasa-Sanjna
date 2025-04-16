@@ -1,5 +1,5 @@
 import { handler } from '@hapi/hapi/lib/cors.js';
-import { getAllTranslationsHandler, getTranslationByIdHandler, addTranslationHandler, getAllTranslationsHistory } from './handlers.js';
+import { getAllTranslationsHandler, getTranslationByIdHandler, getVideoHandler, addTranslationHandler, getAllTranslationsHistory } from './handlers.js';
 import path from 'path';
 import fs from 'fs';
 import pool from '../database.js';
@@ -44,6 +44,11 @@ const routes = [
     method: 'GET',
     path: '/translations/history',
     handler: getAllTranslationsHistory,
+  },
+  {
+    method: 'GET',
+    path: '/videos/{filename}',
+    handler: getVideoHandler
   }
 ];
 

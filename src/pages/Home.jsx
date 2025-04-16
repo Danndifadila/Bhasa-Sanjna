@@ -56,9 +56,9 @@ const Home = () => {
             </button>
           </div>
 
-          <div className="max-w-xl mx-auto">
+          {/* <div className="max-w-xl mx-auto">
             <MediaUploader onUpload={handleUpload} />
-          </div>
+          </div> */}
         </main>
       </div>
     </div>

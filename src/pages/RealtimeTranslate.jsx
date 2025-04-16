@@ -105,25 +105,21 @@ const RealtimeTranslate = () => {
   
       setCameraStatus({ active: true, error: null, tracks: stream.getTracks().length });
   
-      // Mulai merekam
-      const options = { mimeType: 'video/webm' };
+      // Inisialisasi MediaRecorder dengan timeslice untuk mendapatkan chunk secara berkala
+      const options = { mimeType: 'video/webm;codecs=vp9' };
       const mediaRecorder = new MediaRecorder(stream, options);
       const chunks = [];
   
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunks.push(e.data);
+          setRecordedChunks(prev => [...prev, e.data]);
         }
       };
   
-      mediaRecorder.onstop = () => {
-        setRecordedChunks(chunks);
-      };
+      mediaRecorder.start(1000); // Dapatkan data setiap 1 detik
   
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
-  
-      console.log('MediaRecorder started');
     } catch (err) {
       console.error("Error accessing camera:", err);
       setCameraStatus({ active: false, error: err.message, tracks: 0 });
@@ -167,21 +163,34 @@ const RealtimeTranslate = () => {
   // Handler untuk kembali
   const handleGoBack = async () => {
     try {
-      // Stop recorder dulu kalau masih jalan
+      // Stop recorder jika masih aktif
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
+        const waitForChunks = new Promise((resolve) => {
+          mediaRecorderRef.current.onstop = () => {
+            resolve();
+          };
+          mediaRecorderRef.current.stop();
+        });
+        
+        await waitForChunks;
       }
-  
-      // Tunggu sebentar supaya onstop selesai dan state updated
-      await new Promise(resolve => setTimeout(resolve, 500));
   
       let recordedBlob = null;
       if (recordedChunks.length > 0) {
         recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+        
+        // Validasi tambahan untuk blob
+        if (recordedBlob.size <= 0) {
+          throw new Error('Blob video tidak valid (ukuran 0)');
+        }
+      } else {
+        console.warn('Tidak ada rekaman video yang tersedia');
       }
   
-      await api.addTranslations(recordedBlob, translatedText);
-      console.log('Translations and video added successfully');
+      if (recordedBlob) {
+        await api.addTranslations(recordedBlob, translatedText);
+        console.log('Translations and video added successfully');
+      }
     } catch (error) {
       console.error('Error adding data:', error);
     }
